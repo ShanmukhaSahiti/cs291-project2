@@ -35,7 +35,7 @@ def authenticate(req:)
 
   ENV['JWT_SECRET'] = 'SOMESECRET'
   payload = {
-      data: body.to_json,
+      data: body,
       exp: Time.now.to_i + 5,
       nbf: Time.now.to_i + 2
     }
@@ -80,7 +80,7 @@ end
 
 def response(body: nil, status: 200)
   {
-    body: body ? body.to_json + "\n" : '',
+    body: body ? body : '',
     statusCode: status
   }
 end
@@ -147,6 +147,12 @@ if $PROGRAM_NAME == __FILE__
                'httpMethod' => 'GET',
                'path' => '/'
              })
+             PP.pp main(context: {}, event: {
+              'headers' => { 'Authorization' => "Bearer eyJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoie1wibmFtZVwiOiBcImJib2VcIn0iLCJleHAiOjE3Mjk0NzcxMzYsIm5iZiI6MTcyOTQ3NzA4OH0.et5EzfSg8VbU3ZealCpdoqSPFTmDD19lmOTmL1fX8Vg",
+                             'Content-Type' => 'application/json' },
+              'httpMethod' => 'GET',
+              'path' => '/'
+            })
   # invalid Authorization key
   PP.pp main(context: {}, event: {
     'headers' => { 'Auth' => "Bearer #{token}",
