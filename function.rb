@@ -35,8 +35,8 @@ def authenticate(req:)
 
   ENV['JWT_SECRET'] = 'SOMESECRET'
   payload = {
-      data: body,
-      exp: Time.now.to_i + 5,
+      data: JSON.parse(body),
+      exp: Time.now.to_i + 500,
       nbf: Time.now.to_i + 2
     }
   token= JWT.encode payload, ENV['JWT_SECRET'], 'HS256'
@@ -148,7 +148,7 @@ if $PROGRAM_NAME == __FILE__
                'path' => '/'
              })
              PP.pp main(context: {}, event: {
-              'headers' => { 'Authorization' => "Bearer eyJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoie1wibmFtZVwiOiBcImJib2VcIn0iLCJleHAiOjE3Mjk0NzgwMTMsIm5iZiI6MTcyOTQ3NzUxNX0.ZQT6PTbq0q61FobZor_hKUaSKFP6oeWOBVYcqPbVEj4",
+              'headers' => { 'Authorization' => "Bearer eyJhbGciOiJIUzI1NiJ9.eyJkYXRhIjp7Im5hbWUiOiJiYm9lIn0sImV4cCI6MTcyOTQ3OTY4NywibmJmIjoxNzI5NDc5MTg5fQ.brfNqwGkhQGSagQehLBsb0iMexpzvv-R-qH2Rb1CCw0",
                              'Content-Type' => 'application/json' },
               'httpMethod' => 'GET',
               'path' => '/'
