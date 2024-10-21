@@ -36,7 +36,7 @@ def authenticate(req:)
   ENV['JWT_SECRET'] = 'SOMESECRET'
   payload = {
       data: body.to_json,
-      exp: Time.now.to_i + 50,
+      exp: Time.now.to_i + 5,
       nbf: Time.now.to_i + 2
     }
   token= JWT.encode payload, ENV['JWT_SECRET'], 'HS256'
