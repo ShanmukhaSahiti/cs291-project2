@@ -7,7 +7,75 @@ require 'pp'
 def main(event:, context:)
   # You shouldn't need to use context, but its fields are explained here:
   # https://docs.aws.amazon.com/lambda/latest/dg/ruby-context.html
-  response(body: event, status: 200)
+  path = event['path']
+  case path
+  when '/auth/token'
+    authenticate(req: event)
+  when '/'
+    get(req: event)
+  else
+    response(body: nil, status: 404)
+  end
+end
+
+def authenticate(req:)
+  method = req["httpMethod"]
+  headers = req["headers"]
+  body = req["body"]
+
+  if(method != "POST")
+    return response(body:nil, status: 405)
+  end
+  if(headers['Content-Type'] != "application/json")
+    return response(body: nil, status: 415)
+  end
+  if(!isValidJson(json: body))
+    return response(body: nil, status: 422)
+  end
+
+  ENV['JWT_SECRET'] = 'SOMESECRET'
+  payload = {
+      data: body.to_json,
+      exp: Time.now.to_i + 50,
+      nbf: Time.now.to_i + 2
+    }
+  token= JWT.encode payload, ENV['JWT_SECRET'], 'HS256'
+  return response(body: {"token": token}, status: 201)
+end
+
+def get(req:)
+  method = req["httpMethod"]
+  headers = req["headers"]
+  body = req["body"]
+
+  if(method != "GET")
+    return response(body:nil, status: 405)
+  end
+  
+  token = bearer_token(auth: headers['Authorization'])
+  if(token)
+    ENV['JWT_SECRET'] = 'SOMESECRET'
+    begin
+      decoded = JWT.decode(token, ENV['JWT_SECRET'], true, {algorithm: 'HS256'})
+      return response(body: decoded[0]["data"], status: 200)
+    rescue StandardError => e
+      puts(e)
+      return response(body:nil, status: 401)
+    end
+  else 
+    return response(body:nil, status: 403)
+  end
+end
+
+def isValidJson(json:)
+  JSON.parse(json)
+rescue JSON::ParserError, TypeError => e
+  false
+end
+
+def bearer_token(auth:)
+  pattern = /^Bearer /
+  auth.gsub(pattern, '') if auth && auth.match(pattern)
 end
 
 def response(body: nil, status: 200)
@@ -23,13 +91,34 @@ if $PROGRAM_NAME == __FILE__
   # without needing to deploy first.
   ENV['JWT_SECRET'] = 'NOTASECRET'
 
-  # Call /token
+  # Call /auth/token
   PP.pp main(context: {}, event: {
                'body' => '{"name": "bboe"}',
                'headers' => { 'Content-Type' => 'application/json' },
                'httpMethod' => 'POST',
-               'path' => '/token'
+               'path' => '/auth/token'
              })
+  # invalid json
+  PP.pp main(context: {}, event: {
+              'body' => '"name": "bboe"}',
+              'headers' => { 'Content-Type' => 'application/json' },
+              'httpMethod' => 'POST',
+              'path' => '/auth/token'
+            })
+  # invalid method
+  PP.pp main(context: {}, event: {
+              'body' => '{"name": "bboe"}',
+              'headers' => { 'Content-Type' => 'application/json' },
+              'httpMethod' => 'GET',
+              'path' => '/auth/token'
+            })
+  # invalid header
+  PP.pp main(context: {}, event: {
+              'body' => '{"name": "bboe"}',
+              'headers' => { 'Content-Type' => 'application/text' },
+              'httpMethod' => 'POST',
+              'path' => '/auth/token'
+            })
 
   # Generate a token
   payload = {
@@ -38,11 +127,54 @@ if $PROGRAM_NAME == __FILE__
     nbf: Time.now.to_i
   }
   token = JWT.encode payload, ENV['JWT_SECRET'], 'HS256'
+  payload2 = {
+    data: { user_id: 128 },
+    exp: Time.now.to_i,
+    nbf: Time.now.to_i
+  }
+  token2 = JWT.encode payload2, ENV['JWT_SECRET'], 'HS256'
   # Call /
   PP.pp main(context: {}, event: {
                'headers' => { 'Authorization' => "Bearer #{token}",
                               'Content-Type' => 'application/json' },
                'httpMethod' => 'GET',
                'path' => '/'
+             })
+  # invalid Authorization key
+  PP.pp main(context: {}, event: {
+    'headers' => { 'Auth' => "Bearer #{token}",
+                   'Content-Type' => 'application/json' },
+    'httpMethod' => 'GET',
+    'path' => '/'
+  })
+  # invalid Authorization value
+  PP.pp main(context: {}, event: {
+    'headers' => { 'Authorization' => "#{token}",
+                   'Content-Type' => 'application/json' },
+    'httpMethod' => 'GET',
+    'path' => '/'
+  })
+  # expired token
+  PP.pp main(context: {}, event: {
+              'headers' => { 'Authorization' => "Bearer #{token2}",
+                             'Content-Type' => 'application/json' },
+              'httpMethod' => 'GET',
+              'path' => '/'
+            })
+  # invalid token
+  PP.pp main(context: {}, event: {
+               'headers' => { 'Authorization' => "Bearer ghuih.biu.nbiujh",
+                              'Content-Type' => 'application/json' },
+               'httpMethod' => 'GET',
+               'path' => '/'
+             })
+  
+
+  # Call something else
+  PP.pp main(context: {}, event: {
+               'headers' => { 'Authorization' => "Bearer #{token}",
+                              'Content-Type' => 'application/json' },
+               'httpMethod' => 'GET',
+               'path' => '/hey'
              })
 end
