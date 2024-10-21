@@ -56,7 +56,7 @@ def get(req:)
   if(token)
     ENV['JWT_SECRET'] = 'SOMESECRET'
     begin
-      decoded = JWT.decode(token, "ABC", true, {algorithm: 'HS256'})
+      decoded = JWT.decode(token, ENV['JWT_SECRET'], true, {algorithm: 'HS256'})
       return response(body: decoded[0]["data"], status: 200)
     rescue JWT::ExpiredSignature, JWT::ImmatureSignature => e
       return response(body:nil, status: 401)
