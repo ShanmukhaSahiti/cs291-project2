@@ -36,7 +36,7 @@ def authenticate(req:)
   ENV['JWT_SECRET'] = 'SOMESECRET'
   payload = {
       data: JSON.parse(body),
-      exp: Time.now.to_i + 500,
+      exp: Time.now.to_i + 5,
       nbf: Time.now.to_i + 2
     }
   token= JWT.encode payload, ENV['JWT_SECRET'], 'HS256'
@@ -80,7 +80,7 @@ end
 
 def response(body: nil, status: 200)
   {
-    body: body ? body.to_json : '',
+    body: body ? body.to_json + "\n" : '',
     statusCode: status
   }
 end
