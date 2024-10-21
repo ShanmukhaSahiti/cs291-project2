@@ -58,8 +58,9 @@ def get(req:)
     begin
       decoded = JWT.decode(token, ENV['JWT_SECRET'], true, {algorithm: 'HS256'})
       return response(body: decoded[0]["data"], status: 200)
-    rescue StandardError => e
-      puts(e)
+    rescue JWT::ExpiredSignature, JWT::ImmatureSignature => e
+      return response(body:nil, status: 403)
+    rescue JWT::DecodeError, StandardError
       return response(body:nil, status: 401)
     end
   else 
@@ -89,7 +90,7 @@ if $PROGRAM_NAME == __FILE__
   # If you run this file directly via `ruby function.rb` the following code
   # will execute. You can use the code below to help you test your functions
   # without needing to deploy first.
-  ENV['JWT_SECRET'] = 'NOTASECRET'
+  ENV['JWT_SECRET'] = 'SOMESECRET'
 
   # Call /auth/token
   PP.pp main(context: {}, event: {
