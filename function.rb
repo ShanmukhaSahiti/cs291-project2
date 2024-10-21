@@ -80,7 +80,7 @@ end
 
 def response(body: nil, status: 200)
   {
-    body: body ? body : '',
+    body: body ? body.to_json : '',
     statusCode: status
   }
 end
@@ -148,7 +148,7 @@ if $PROGRAM_NAME == __FILE__
                'path' => '/'
              })
              PP.pp main(context: {}, event: {
-              'headers' => { 'Authorization' => "Bearer eyJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoie1wibmFtZVwiOiBcImJib2VcIn0iLCJleHAiOjE3Mjk0NzcxMzYsIm5iZiI6MTcyOTQ3NzA4OH0.et5EzfSg8VbU3ZealCpdoqSPFTmDD19lmOTmL1fX8Vg",
+              'headers' => { 'Authorization' => "Bearer eyJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoie1wibmFtZVwiOiBcImJib2VcIn0iLCJleHAiOjE3Mjk0NzgwMTMsIm5iZiI6MTcyOTQ3NzUxNX0.ZQT6PTbq0q61FobZor_hKUaSKFP6oeWOBVYcqPbVEj4",
                              'Content-Type' => 'application/json' },
               'httpMethod' => 'GET',
               'path' => '/'
