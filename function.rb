@@ -20,13 +20,13 @@ end
 
 def authenticate(req:)
   method = req["httpMethod"]
-  headers = req["headers"]
+  headers = req["headers"].transform_keys{ |key| key.to_s.downcase }
   body = req["body"]
 
   if(method != "POST")
     return response(body:nil, status: 405)
   end
-  if(headers['Content-Type'] != "application/json")
+  if(headers['content-type'] != "application/json")
     return response(body: nil, status: 415)
   end
   if(!isValidJson(json: body))
@@ -45,14 +45,14 @@ end
 
 def get(req:)
   method = req["httpMethod"]
-  headers = req["headers"]
+  headers = req["headers"].transform_keys{ |key| key.to_s.downcase }
   body = req["body"]
 
   if(method != "GET")
     return response(body:nil, status: 405)
   end
   
-  token = bearer_token(auth: headers['Authorization'])
+  token = bearer_token(auth: (headers['authorization']).to_s.strip)
   if(token)
     ENV['JWT_SECRET'] = 'SOMESECRET'
     begin
@@ -98,6 +98,13 @@ if $PROGRAM_NAME == __FILE__
                'httpMethod' => 'POST',
                'path' => '/auth/token'
              })
+  # case insensitive content type
+  PP.pp main(context: {}, event: {
+              'body' => '{"name": "bboe"}',
+              'headers' => { 'Content-tYpe' => 'application/json' },
+              'httpMethod' => 'POST',
+              'path' => '/auth/token'
+            })
   # invalid json
   PP.pp main(context: {}, event: {
               'body' => '"name": "bboe"}',
