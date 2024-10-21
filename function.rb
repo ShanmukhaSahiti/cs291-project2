@@ -33,7 +33,7 @@ def authenticate(req:)
     return response(body: nil, status: 422)
   end
 
-  ENV['JWT_SECRET'] = 'SOMESECRET'
+  #ENV['JWT_SECRET'] = 'SOMESECRET'
   payload = {
       data: JSON.parse(body),
       exp: Time.now.to_i + 5,
@@ -54,7 +54,7 @@ def get(req:)
   
   token = bearer_token(auth: (headers['authorization']).to_s.strip)
   if(token)
-    ENV['JWT_SECRET'] = 'SOMESECRET'
+    #ENV['JWT_SECRET'] = 'SOMESECRET'
     begin
       decoded = JWT.decode(token, ENV['JWT_SECRET'], true, {algorithm: 'HS256'})
       return response(body: decoded[0]["data"], status: 200)
